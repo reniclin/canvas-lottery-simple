@@ -241,7 +241,7 @@ function addWinnerToList(name, color) {
     div.className = 'winner-item';
     div.style.borderLeftColor = color;
     // A11y: Let screen readers know about the new winner
-    div.setAttribute('role', 'status'); 
+    div.setAttribute('role', 'status');
 
     const nameSpan = document.createElement('span');
     nameSpan.textContent = name;
@@ -291,7 +291,7 @@ function addBallsForParticipant(p) {
 function updatePhysics(deltaTime) {
     // Normalize speed: 60fps ~ 16.6ms
     // If deltaTime is 16.6ms, timeScale should be 1.0
-    const timeScale = deltaTime / 16.6; 
+    const timeScale = deltaTime / 16.6;
 
     // Speed multiplier based on state
     let stateSpeed = CONFIG.BASE_SPEED;
@@ -358,7 +358,7 @@ function updatePhysics(deltaTime) {
         p.y += p.vy * timeScale;
         p.vy += CONFIG.PARTICLE_GRAVITY * timeScale; // gravity
         p.life -= 1 * timeScale;
-        
+
         if (p.life <= 0) {
             particles.splice(i, 1);
         }
@@ -518,3 +518,17 @@ function revealWinner() {
         winnerOverlay.style.transform = "translate(-50%, -50%) scale(0.5)"; // Reset scale
     }, CONFIG.TIMEOUT_REVEAL);
 }
+
+// --- iOS Safari Zoom Prevention ---
+// Safari ignores user-scalable=no, so we must use JS events.
+document.addEventListener('gesturestart', function (e) {
+    e.preventDefault();
+});
+
+document.addEventListener('gesturechange', function (e) {
+    e.preventDefault();
+});
+
+document.addEventListener('gestureend', function (e) {
+    e.preventDefault();
+});

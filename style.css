@@ -12,6 +12,8 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-color);
     margin: 0;
+    touch-action: manipulation;
+    /* Disables double-tap to zoom */
     height: 100vh;
     overflow: hidden;
     display: grid;
