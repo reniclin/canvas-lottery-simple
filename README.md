@@ -11,8 +11,14 @@ A lightweight, physics-based lottery application built with HTML5 Canvas and Van
     -   **Rolling**: Fast-paced bouncing physics during the draw.
     -   **Showcase**: Smooth camera-like focus on the winning ball.
     -   **Reveal**: Dramatic winner announcement with confetti effects.
--   **Sound Effects**: (Note: Sound implementation is currently not visible in the code, but visual effects are present).
+-   **Mobile Responsive**: Optimized layout for smartphones (Canvas Top -> Winners -> Participants).
 -   **Responsive Design**: Adapts to different screen sizes.
+
+## File Structure
+
+-   `index.html`: Main application interface.
+-   `style.css`: Styling for desktop (Grid) and mobile (Flexbox).
+-   `script.js`: Game logic, physics engine, and configuration.
 
 ## Usage
 

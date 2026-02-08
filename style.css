@@ -332,3 +332,74 @@ canvas {
 ::-webkit-scrollbar-thumb:hover {
     background: #aaa;
 }
+
+/* --- Mobile Responsive Design --- */
+@media (max-width: 768px) {
+    body {
+        /* Use flex column to easily reorder children */
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        /* Allow scrolling on mobile */
+        height: auto;
+        min-height: 100vh;
+    }
+
+    /* Order 1: Canvas & Start Button (Middle in DOM) */
+    .center-stage {
+        order: 1;
+        padding: 10px;
+        min-height: auto;
+        /* Allow it to shrink */
+    }
+
+    /* Order 2: Winner List (Last in DOM) */
+    .panel.right {
+        order: 2;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        background-color: #fafafa;
+        /* Reset any height constraints if needed */
+        flex: 0 0 auto;
+    }
+
+    /* Order 3: Participants Input (First in DOM) */
+    .panel {
+        order: 3;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        /* Actually this will be at bottom, maybe remove border-bottom and add border-top? */
+        border-top: 1px solid var(--border-color);
+        padding: 15px;
+        /* Reset specific panel styles */
+        flex: 0 0 auto;
+    }
+
+    #canvas-container {
+        height: 30vh;
+        /* Shorter height for mobile */
+        min-height: 250px;
+    }
+
+    /* Adjust modal for small screens */
+    .modal-box {
+        width: 90%;
+        max-width: 320px;
+    }
+
+    h2 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    /* Make buttons touch-friendly */
+    button {
+        padding: 12px;
+    }
+
+    #start-btn {
+        padding: 12px 30px;
+        font-size: 1.2rem;
+    }
+}
