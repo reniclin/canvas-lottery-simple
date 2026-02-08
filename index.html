@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽籤</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-box">
+            <h3 class="modal-title">確定要重置嗎？</h3>
+            <p class="modal-desc">此動作將清空所有參與者名單、球體與獲獎紀錄，且無法復原。</p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-cancel" id="modal-cancel">取消</button>
+                <button class="modal-btn btn-danger" id="modal-confirm">確定清空</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="alert-modal">
+        <div class="modal-box">
+            <h3 class="modal-title" id="alert-title">提示</h3>
+            <p class="modal-desc" id="alert-desc">這裡顯示提示訊息</p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-primary" id="alert-ok">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>👥 參與者</h2>
+        <div class="input-group">
+            <input type="text" id="input-name" placeholder="名字 (Name)" autocomplete="off">
+            <input type="number" id="input-weight" placeholder="權重 (1-999)" value="1" min="1" max="999">
+            <button id="add-btn">加入名單</button>
+        </div>
+
+        <div style="font-size:0.9em; color:#666; margin-bottom:5px;">
+            目前人數: <span id="count">0</span> | 球數: <span id="ball-count">0</span>
+        </div>
+
+        <div class="scroll-list" id="participant-list">
+        </div>
+
+        <button id="reset-btn">🔄 重置 (Reset)</button>
+    </div>
+
+    <div class="center-stage">
+        <div id="canvas-container">
+            <canvas id="simulation"></canvas>
+            <div id="winner-overlay" role="status" aria-live="polite">WINNER</div>
+        </div>
+        <button id="start-btn">開始抽球 (Start)</button>
+    </div>
+
+    <div class="panel right">
+        <h2>🏆 獲獎名單</h2>
+        <div class="scroll-list" id="winner-list" aria-live="polite">
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

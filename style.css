@@ -1,0 +1,334 @@
+:root {
+    --primary-color: #2196F3;
+    --primary-hover: #1976D2;
+    --success-color: #4CAF50;
+    --danger-color: #ff4444;
+    --bg-color: #f4f7f6;
+    --panel-bg: #ffffff;
+    --border-color: #e0e0e0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr;
+    grid-template-rows: 100vh;
+}
+
+/* --- 通用面板樣式 --- */
+.panel {
+    background: var(--panel-bg);
+    padding: 20px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.panel.right {
+    border-right: none;
+    border-left: 1px solid var(--border-color);
+    background-color: #fafafa;
+}
+
+h2,
+h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* --- 左側：參與者區 --- */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+#add-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.scroll-list {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 5px;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+    margin-bottom: 2px;
+}
+
+.participant-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.delete-btn {
+    color: #aaa;
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+.delete-btn:hover {
+    color: var(--danger-color);
+    background: #fee;
+    border-radius: 4px;
+}
+
+#reset-btn {
+    background-color: var(--danger-color);
+    color: white;
+    margin-top: 15px;
+}
+
+/* --- 中間：抽獎箱 --- */
+.center-stage {
+    position: relative;
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+#canvas-container {
+    width: 100%;
+    height: 80%;
+    background: white;
+    border: 8px solid #333;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#start-btn {
+    margin-top: 20px;
+    padding: 15px 50px;
+    font-size: 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+#start-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+#winner-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 5rem;
+    font-weight: 800;
+    color: #333;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 20;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* --- 右側：獲獎名單 --- */
+.winner-item {
+    padding: 12px;
+    background-color: #fff3cd;
+    border-left: 5px solid #ffc107;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    animation: slideIn 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.winner-rank {
+    font-size: 0.8em;
+    color: #856404;
+    margin-right: 10px;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* --- Custom Modal Dialog (共用樣式) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-box {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.active .modal-box {
+    transform: scale(1);
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.modal-desc {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    font-weight: bold;
+}
+
+/* 按鈕樣式 */
+.btn-cancel {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.btn-cancel:hover {
+    background: #d0d0d0;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #e04040;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+    min-width: 80px;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
