@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽籤</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --primary-hover: #1976D2;
+            --success-color: #4CAF50;
+            --danger-color: #ff4444;
+            --bg-color: #f4f7f6;
+            --panel-bg: #ffffff;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 3fr 1fr;
+            grid-template-rows: 100vh;
+        }
+
+        /* --- 通用面板樣式 --- */
+        .panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .panel.right {
+            border-right: none;
+            border-left: 1px solid var(--border-color);
+            background-color: #fafafa;
+        }
+
+        h2, h3 { margin: 0 0 15px 0; color: #333; font-size: 1.2rem; text-align: center;}
+
+        /* --- 左側：參與者區 --- */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+
+        #add-btn { background-color: var(--success-color); color: white; }
+
+        .scroll-list {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+            margin-bottom: 2px;
+        }
+
+        .participant-info { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .color-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+        .delete-btn {
+            color: #aaa;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+        .delete-btn:hover { color: var(--danger-color); background: #fee; border-radius: 4px; }
+
+        #reset-btn {
+            background-color: var(--danger-color);
+            color: white;
+            margin-top: 15px;
+        }
+
+        /* --- 中間：抽獎箱 --- */
+        .center-stage {
+            position: relative;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 80%;
+            background: white;
+            border: 8px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #start-btn {
+            margin-top: 20px;
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+        #start-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+
+        #winner-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            font-weight: 800;
+            color: #333;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 20;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* --- 右側：獲獎名單 --- */
+        .winner-item {
+            padding: 12px;
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .winner-rank {
+            font-size: 0.8em;
+            color: #856404;
+            margin-right: 10px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* --- Custom Modal Dialog (共用樣式) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            width: 300px;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .modal-desc {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+
+        /* 按鈕樣式 */
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn-cancel:hover { background: #d0d0d0; }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        .btn-danger:hover { background: #e04040; }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            min-width: 80px;
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-box">
+            <h3 class="modal-title">確定要重置嗎？</h3>
+            <p class="modal-desc">此動作將清空所有參與者名單、球體與獲獎紀錄，且無法復原。</p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-cancel" id="modal-cancel">取消</button>
+                <button class="modal-btn btn-danger" id="modal-confirm">確定清空</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="alert-modal">
+        <div class="modal-box">
+            <h3 class="modal-title" id="alert-title">提示</h3>
+            <p class="modal-desc" id="alert-desc">這裡顯示提示訊息</p>
+            <div class="modal-buttons">
+                <button class="modal-btn btn-primary" id="alert-ok">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>👥 參與者</h2>
+        <div class="input-group">
+            <input type="text" id="input-name" placeholder="名字 (Name)" autocomplete="off">
+            <input type="number" id="input-weight" placeholder="權重 (1-999)" value="1" min="1" max="999">
+            <button id="add-btn">加入名單</button>
+        </div>
+
+        <div style="font-size:0.9em; color:#666; margin-bottom:5px;">
+            目前人數: <span id="count">0</span> | 球數: <span id="ball-count">0</span>
+        </div>
+
+        <div class="scroll-list" id="participant-list">
+        </div>
+
+        <button id="reset-btn">🔄 重置所有 (Reset)</button>
+    </div>
+
+    <div class="center-stage">
+        <div id="canvas-container">
+            <canvas id="simulation"></canvas>
+            <div id="winner-overlay">WINNER</div>
+        </div>
+        <button id="start-btn">開始抽球 (Start)</button>
+    </div>
+
+    <div class="panel right">
+        <h2>🏆 獲獎名單</h2>
+        <div class="scroll-list" id="winner-list">
+        </div>
+    </div>
+
+    <script>
+        const MAX_WEIGHT_PER_PERSON = 999;
+
+        const canvas = document.getElementById('simulation');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+
+        let width, height;
+
+        function resizeCanvas() {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let participants = [];
+        let balls = [];
+        let winnerCount = 0;
+        let isRolling = false;
+
+        const nameInput = document.getElementById('input-name');
+        const weightInput = document.getElementById('input-weight');
+        const listEl = document.getElementById('participant-list');
+        const countEl = document.getElementById('count');
+        const ballCountEl = document.getElementById('ball-count');
+        const winnerListEl = document.getElementById('winner-list');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const winnerOverlay = document.getElementById('winner-overlay');
+
+        // --- Modals 邏輯 ---
+
+        // Confirm Modal (重置)
+        const confirmModal = document.getElementById('confirm-modal');
+        const modalCancelBtn = document.getElementById('modal-cancel');
+        const modalConfirmBtn = document.getElementById('modal-confirm');
+
+        // Alert Modal (提示)
+        const alertModal = document.getElementById('alert-modal');
+        const alertTitle = document.getElementById('alert-title');
+        const alertDesc = document.getElementById('alert-desc');
+        const alertOkBtn = document.getElementById('alert-ok');
+
+        // 封裝自訂 Alert 函式
+        function showCustomAlert(title, message) {
+            alertTitle.innerText = title;
+            alertDesc.innerText = message;
+            alertModal.classList.add('active');
+            alertOkBtn.focus(); // 讓焦點跑到按鈕上，方便按 Enter 關閉
+        }
+
+        alertOkBtn.addEventListener('click', () => {
+            alertModal.classList.remove('active');
+        });
+
+        // 重置按鈕 -> 開啟 Confirm Modal
+        resetBtn.addEventListener('click', () => {
+            confirmModal.classList.add('active');
+        });
+
+        modalCancelBtn.addEventListener('click', () => {
+            confirmModal.classList.remove('active');
+        });
+
+        modalConfirmBtn.addEventListener('click', () => {
+            executeReset();
+            confirmModal.classList.remove('active');
+        });
+
+        // 點擊遮罩關閉任意 Modal
+        [confirmModal, alertModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Esc 鍵關閉任意 Modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                confirmModal.classList.remove('active');
+                alertModal.classList.remove('active');
+            }
+        });
+
+        // --- 主程式邏輯 ---
+
+        document.getElementById('add-btn').addEventListener('click', addParticipant);
+
+        nameInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') addParticipant(); });
+        weightInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') addParticipant(); });
+
+        function getRandomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            return `hsl(${hue}, 70%, 60%)`;
+        }
+
+        function getSecureRandomIndex(max) {
+            if (max <= 0) return 0;
+            const array = new Uint32Array(1);
+            window.crypto.getRandomValues(array);
+            const randomFloat = array[0] / (0xFFFFFFFF + 1);
+            return Math.floor(randomFloat * max);
+        }
+
+        function addParticipant() {
+            const name = nameInput.value.trim();
+            let weight = parseInt(weightInput.value);
+
+            if (!name || isNaN(weight) || weight < 1) {
+                // 替換：showCustomAlert
+                showCustomAlert("輸入錯誤", "請輸入有效的名字和權重");
+                return;
+            }
+
+            if (weight > MAX_WEIGHT_PER_PERSON) {
+                // 替換：showCustomAlert
+                showCustomAlert("權重過大", `單人權重請勿超過 ${MAX_WEIGHT_PER_PERSON}`);
+                return;
+            }
+
+            const id = Date.now() + Math.random();
+            const color = getRandomColor();
+
+            const newParticipant = { id, name, weight, color };
+            participants.push(newParticipant);
+
+            addBallsForParticipant(newParticipant);
+            renderList();
+
+            nameInput.value = '';
+            weightInput.value = '1';
+            nameInput.focus();
+        }
+
+        function removeParticipant(id) {
+            participants = participants.filter(p => p.id !== id);
+            balls = balls.filter(b => b.ownerId !== id);
+            resizeBalls();
+            renderList();
+        }
+
+        function executeReset() {
+            participants = [];
+            balls = [];
+            winnerCount = 0;
+
+            listEl.innerHTML = '';
+            winnerListEl.innerHTML = '';
+            countEl.innerText = '0';
+            ballCountEl.innerText = '0';
+            nameInput.value = '';
+            weightInput.value = '1';
+
+            startBtn.disabled = false;
+            startBtn.innerText = "開始抽球 (Start)";
+
+            winnerOverlay.style.opacity = 0;
+            winnerOverlay.innerText = "WINNER";
+        }
+
+        function renderList() {
+            listEl.innerHTML = '';
+            countEl.innerText = participants.length;
+            ballCountEl.innerText = balls.length;
+
+            participants.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'participant-info';
+
+                const colorDot = document.createElement('span');
+                colorDot.className = 'color-dot';
+                colorDot.style.backgroundColor = p.color;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = p.name;
+
+                const weightSpan = document.createElement('span');
+                weightSpan.style.color = '#888';
+                weightSpan.style.fontSize = '0.8em';
+                weightSpan.textContent = `x${p.weight}`;
+
+                infoDiv.appendChild(colorDot);
+                infoDiv.appendChild(nameSpan);
+                infoDiv.appendChild(weightSpan);
+
+                const deleteBtn = document.createElement('span');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '✕';
+                deleteBtn.onclick = () => removeParticipant(p.id);
+
+                div.appendChild(infoDiv);
+                div.appendChild(deleteBtn);
+                
+                listEl.appendChild(div);
+            });
+        }
+
+        function addWinnerToList(name, color) {
+            winnerCount++;
+            const div = document.createElement('div');
+            div.className = 'winner-item';
+            div.style.borderLeftColor = color;
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = name;
+
+            const rankSpan = document.createElement('span');
+            rankSpan.className = 'winner-rank';
+            rankSpan.textContent = `#${winnerCount}`;
+
+            div.appendChild(nameSpan);
+            div.appendChild(rankSpan);
+
+            // 最新獲獎者排在最下方 (1, 2, 3...)
+            winnerListEl.appendChild(div);
+            winnerListEl.scrollTop = winnerListEl.scrollHeight;
+        }
+
+        function getOptimalRadius() {
+            const totalBalls = balls.length;
+            if (totalBalls < 50) return 12;
+            if (totalBalls < 200) return 10;
+            if (totalBalls < 500) return 8;
+            if (totalBalls < 1000) return 6;
+            return 5;
+        }
+
+        function resizeBalls() {
+            const newRadius = getOptimalRadius();
+            balls.forEach(ball => ball.radius = newRadius);
+        }
+
+        function addBallsForParticipant(p) {
+            for (let i = 0; i < p.weight; i++) {
+                balls.push({
+                    x: Math.random() * (width - 20) + 10,
+                    y: Math.random() * (height - 20) + 10,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    radius: 10,
+                    color: p.color,
+                    ownerId: p.id,
+                    ownerName: p.name
+                });
+            }
+            resizeBalls();
+        }
+
+        function updatePhysics() {
+            const speedMultiplier = isRolling ? 4.0 : 1.0;
+
+            balls.forEach(ball => {
+                ball.x += ball.vx * speedMultiplier;
+                ball.y += ball.vy * speedMultiplier;
+
+                if (ball.x - ball.radius < 0) {
+                    ball.x = ball.radius;
+                    ball.vx *= -1;
+                } else if (ball.x + ball.radius > width) {
+                    ball.x = width - ball.radius;
+                    ball.vx *= -1;
+                }
+
+                if (ball.y - ball.radius < 0) {
+                    ball.y = ball.radius;
+                    ball.vy *= -1;
+                } else if (ball.y + ball.radius > height) {
+                    ball.y = height - ball.radius;
+                    ball.vy *= -1;
+                }
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            balls.forEach(ball => {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                if (ball.radius > 6) {
+                    ctx.beginPath();
+                    ctx.arc(ball.x - ball.radius/3, ball.y - ball.radius/3, ball.radius/3, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(255,255,255,0.3)";
+                    ctx.fill();
+                }
+            });
+
+            if (balls.length === 0 && participants.length === 0) {
+                ctx.fillStyle = "#ccc";
+                ctx.font = "24px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("等待加入...", width/2, height/2);
+            } else if (balls.length === 0 && participants.length > 0) {
+                 ctx.fillStyle = "#ccc";
+                ctx.font = "24px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("球已抽完", width/2, height/2);
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        setInterval(updatePhysics, 16);
+        draw();
+
+        startBtn.addEventListener('click', () => {
+            if (balls.length === 0) {
+                // 替換：showCustomAlert
+                showCustomAlert("無法開始", "箱子裡沒有球了！");
+                return;
+            }
+
+            isRolling = true;
+            startBtn.disabled = true;
+            startBtn.innerText = "滾動中...";
+            winnerOverlay.style.opacity = 0;
+
+            setTimeout(() => {
+                pickWinner();
+            }, 1500);
+        });
+
+        function pickWinner() {
+            const winningBallIndex = getSecureRandomIndex(balls.length);
+
+            const winningBall = balls[winningBallIndex];
+            const winnerId = winningBall.ownerId;
+            const winnerName = winningBall.ownerName;
+            const winnerColor = winningBall.color;
+
+            isRolling = false;
+
+            showWinnerEffect(winnerName, winnerColor);
+            addWinnerToList(winnerName, winnerColor);
+
+            setTimeout(() => {
+                balls = balls.filter(b => b.ownerId !== winnerId);
+                removeParticipant(winnerId);
+
+                resizeBalls();
+
+                startBtn.disabled = false;
+                startBtn.innerText = "開始抽球 (Start)";
+            }, 1200);
+        }
+
+        function showWinnerEffect(name, color) {
+            winnerOverlay.innerText = name;
+            winnerOverlay.style.color = color;
+            winnerOverlay.style.textShadow = `3px 3px 0 #fff, -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff`;
+            winnerOverlay.style.opacity = 1;
+            winnerOverlay.style.transform = "translate(-50%, -50%) scale(1.5)";
+
+            setTimeout(() => {
+                 winnerOverlay.style.transform = "translate(-50%, -50%) scale(1)";
+            }, 200);
+        }
+    </script>
+</body>
+</html>
