@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,7 +44,13 @@
             background-color: #fafafa;
         }
 
-        h2, h3 { margin: 0 0 15px 0; color: #333; font-size: 1.2rem; text-align: center;}
+        h2,
+        h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.2rem;
+            text-align: center;
+        }
 
         /* --- 左側：參與者區 --- */
         .input-group {
@@ -72,9 +79,15 @@
             font-weight: bold;
             transition: opacity 0.2s;
         }
-        button:hover { opacity: 0.9; }
 
-        #add-btn { background-color: var(--success-color); color: white; }
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #add-btn {
+            background-color: var(--success-color);
+            color: white;
+        }
 
         .scroll-list {
             flex: 1;
@@ -94,15 +107,31 @@
             margin-bottom: 2px;
         }
 
-        .participant-info { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-        .color-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .participant-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
 
         .delete-btn {
             color: #aaa;
             cursor: pointer;
             padding: 2px 6px;
         }
-        .delete-btn:hover { color: var(--danger-color); background: #fee; border-radius: 4px; }
+
+        .delete-btn:hover {
+            color: var(--danger-color);
+            background: #fee;
+            border-radius: 4px;
+        }
 
         #reset-btn {
             background-color: var(--danger-color);
@@ -127,7 +156,7 @@
             background: white;
             border: 8px solid #333;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             position: relative;
             overflow: hidden;
         }
@@ -147,7 +176,12 @@
             border-radius: 50px;
             box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
-        #start-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+
+        #start-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
 
         #winner-overlay {
             position: absolute;
@@ -186,8 +220,15 @@
         }
 
         @keyframes slideIn {
-            from { transform: translateX(20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         /* --- Custom Modal Dialog (共用樣式) --- */
@@ -216,7 +257,7 @@
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             width: 300px;
             text-align: center;
             transform: scale(0.8);
@@ -259,28 +300,49 @@
             background: #e0e0e0;
             color: #333;
         }
-        .btn-cancel:hover { background: #d0d0d0; }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
 
         .btn-danger {
             background: var(--danger-color);
             color: white;
         }
-        .btn-danger:hover { background: #e04040; }
+
+        .btn-danger:hover {
+            background: #e04040;
+        }
 
         .btn-primary {
             background: var(--primary-color);
             color: white;
             min-width: 80px;
         }
-        .btn-primary:hover { background: var(--primary-hover); }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
 
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="modal-overlay" id="confirm-modal">
@@ -319,7 +381,7 @@
         <div class="scroll-list" id="participant-list">
         </div>
 
-        <button id="reset-btn">🔄 重置所有 (Reset)</button>
+        <button id="reset-btn">🔄 重置 (Reset)</button>
     </div>
 
     <div class="center-stage">
@@ -356,8 +418,19 @@
 
         let participants = [];
         let balls = [];
+        let particles = [];
         let winnerCount = 0;
-        let isRolling = false;
+
+        // Game States
+        const STATE = {
+            IDLE: 0,
+            ROLLING: 1,
+            SHOWCASE: 2, // 選中球飛出/放大
+            REVEAL: 3    //顯示名字
+        };
+        let currentState = STATE.IDLE;
+        let showcaseBall = null; // store the winning ball object
+        let showcaseTimer = 0;
 
         const nameInput = document.getElementById('input-name');
         const weightInput = document.getElementById('input-weight');
@@ -429,8 +502,8 @@
 
         document.getElementById('add-btn').addEventListener('click', addParticipant);
 
-        nameInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') addParticipant(); });
-        weightInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') addParticipant(); });
+        nameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addParticipant(); });
+        weightInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addParticipant(); });
 
         function getRandomColor() {
             const hue = Math.floor(Math.random() * 360);
@@ -486,6 +559,8 @@
             participants = [];
             balls = [];
             winnerCount = 0;
+            currentState = STATE.IDLE;
+            showcaseBall = null;
 
             listEl.innerHTML = '';
             winnerListEl.innerHTML = '';
@@ -499,6 +574,7 @@
 
             winnerOverlay.style.opacity = 0;
             winnerOverlay.innerText = "WINNER";
+            winnerOverlay.style.transform = "translate(-50%, -50%) scale(0.5)";
         }
 
         function renderList() {
@@ -536,7 +612,7 @@
 
                 div.appendChild(infoDiv);
                 div.appendChild(deleteBtn);
-                
+
                 listEl.appendChild(div);
             });
         }
@@ -593,9 +669,32 @@
         }
 
         function updatePhysics() {
-            const speedMultiplier = isRolling ? 4.0 : 1.0;
+            // Speed multiplier based on state
+            let speedMultiplier = 1.0;
+            if (currentState === STATE.ROLLING) speedMultiplier = 8.0; // Faster rolling
+            if (currentState === STATE.SHOWCASE) speedMultiplier = 0.5; // Slow down background
+            if (currentState === STATE.REVEAL) speedMultiplier = 0.2; // Very slow background
 
             balls.forEach(ball => {
+                // If in SHOWCASE state, handle the winning ball separately
+                if (currentState === STATE.SHOWCASE && ball === showcaseBall) {
+                    // Interpolate position to center
+                    const targetX = width / 2;
+                    const targetY = height / 2;
+                    ball.x += (targetX - ball.x) * 0.1;
+                    ball.y += (targetY - ball.y) * 0.1;
+
+                    // Interpolate size
+                    const targetRadius = Math.min(width, height) / 4;
+                    ball.radius += (targetRadius - ball.radius) * 0.1;
+
+                    // Keep velocity 0 to prevent drift
+                    ball.vx = 0;
+                    ball.vy = 0;
+                    return;
+                }
+
+                // Normal physics for other balls
                 ball.x += ball.vx * speedMultiplier;
                 ball.y += ball.vy * speedMultiplier;
 
@@ -615,34 +714,102 @@
                     ball.vy *= -1;
                 }
             });
+
+            // Transition logic for SHOWCASE -> REVEAL
+            if (currentState === STATE.SHOWCASE && showcaseBall) {
+                showcaseTimer++;
+                if (showcaseTimer > 30) { // Approx 0.5 second
+                    currentState = STATE.REVEAL;
+                    revealWinner();
+                    createParticles(width / 2, height / 2); // Spawn confetti
+                }
+            }
+
+            // Update particles
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; // gravity
+                p.life--;
+                if (p.life <= 0) particles.splice(index, 1);
+            });
+        }
+
+        function createParticles(x, y) {
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 15,
+                    vy: (Math.random() - 0.5) * 15,
+                    life: 100 + Math.random() * 50,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    size: Math.random() * 5 + 2
+                });
+            }
         }
 
         function draw() {
             ctx.clearRect(0, 0, width, height);
 
+            // Draw other balls first (background)
             balls.forEach(ball => {
+                if (ball === showcaseBall) return; // Draw winner last
+
+                ctx.globalAlpha = (currentState === STATE.SHOWCASE || currentState === STATE.REVEAL) ? 0.2 : 1.0;
+
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
                 ctx.fillStyle = ball.color;
                 ctx.fill();
-                if (ball.radius > 6) {
+
+                if (ball.radius > 6) { // shine effect
                     ctx.beginPath();
-                    ctx.arc(ball.x - ball.radius/3, ball.y - ball.radius/3, ball.radius/3, 0, Math.PI * 2);
+                    ctx.arc(ball.x - ball.radius / 3, ball.y - ball.radius / 3, ball.radius / 3, 0, Math.PI * 2);
                     ctx.fillStyle = "rgba(255,255,255,0.3)";
                     ctx.fill();
                 }
             });
 
+            ctx.globalAlpha = 1.0; // Reset alpha
+
+            // Draw winning ball on top
+            if (showcaseBall) {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+
+                ctx.beginPath();
+                ctx.arc(showcaseBall.x, showcaseBall.y, showcaseBall.radius, 0, Math.PI * 2);
+                ctx.fillStyle = showcaseBall.color;
+                ctx.fill();
+
+                // Shine
+                ctx.beginPath();
+                ctx.arc(showcaseBall.x - showcaseBall.radius / 3, showcaseBall.y - showcaseBall.radius / 3, showcaseBall.radius / 3, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255,255,255,0.3)";
+                ctx.fill();
+
+                ctx.shadowBlur = 0; // Reset shadow
+            }
+
+            // Draw Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+
+
+
             if (balls.length === 0 && participants.length === 0) {
                 ctx.fillStyle = "#ccc";
                 ctx.font = "24px sans-serif";
                 ctx.textAlign = "center";
-                ctx.fillText("等待加入...", width/2, height/2);
-            } else if (balls.length === 0 && participants.length > 0) {
-                 ctx.fillStyle = "#ccc";
+                ctx.fillText("等待加入...", width / 2, height / 2);
+            } else if (balls.length === 0 && participants.length > 0 && currentState === STATE.IDLE) {
+                ctx.fillStyle = "#ccc";
                 ctx.font = "24px sans-serif";
                 ctx.textAlign = "center";
-                ctx.fillText("球已抽完", width/2, height/2);
+                ctx.fillText("球已抽完", width / 2, height / 2);
             }
 
             requestAnimationFrame(draw);
@@ -653,43 +820,63 @@
 
         startBtn.addEventListener('click', () => {
             if (balls.length === 0) {
-                // 替換：showCustomAlert
                 showCustomAlert("無法開始", "箱子裡沒有球了！");
                 return;
             }
 
-            isRolling = true;
+            if (currentState !== STATE.IDLE) return;
+
+            currentState = STATE.ROLLING;
             startBtn.disabled = true;
             startBtn.innerText = "滾動中...";
             winnerOverlay.style.opacity = 0;
+            showcaseBall = null;
 
             setTimeout(() => {
-                pickWinner();
-            }, 1500);
+                selectWinner();
+            }, 3000); // Roll for 3 seconds
         });
 
-        function pickWinner() {
+        function selectWinner() {
             const winningBallIndex = getSecureRandomIndex(balls.length);
+            showcaseBall = balls[winningBallIndex];
 
-            const winningBall = balls[winningBallIndex];
-            const winnerId = winningBall.ownerId;
-            const winnerName = winningBall.ownerName;
-            const winnerColor = winningBall.color;
+            // Bring winning ball to front artificially by moving to end of array (optional, but render handles it)
+            // Start showcase animation
+            currentState = STATE.SHOWCASE;
+            showcaseTimer = 0;
+        }
 
-            isRolling = false;
+        function revealWinner() {
+            const winnerName = showcaseBall.ownerName;
+            const winnerColor = showcaseBall.color;
+            const winnerId = showcaseBall.ownerId;
 
-            showWinnerEffect(winnerName, winnerColor);
+            // Show Overlay
+            winnerOverlay.innerText = winnerName;
+            winnerOverlay.style.color = winnerColor;
+            winnerOverlay.style.textShadow = `3px 3px 0 #fff, -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff`;
+            winnerOverlay.style.opacity = 1;
+            winnerOverlay.style.transform = "translate(-50%, -50%) scale(1.5)"; // Zoom in text
+
             addWinnerToList(winnerName, winnerColor);
 
+            // Wait then cleanup
             setTimeout(() => {
+                // Remove winning ball and all other balls of same owner
                 balls = balls.filter(b => b.ownerId !== winnerId);
                 removeParticipant(winnerId);
 
                 resizeBalls();
 
+                currentState = STATE.IDLE;
+                showcaseBall = null;
                 startBtn.disabled = false;
                 startBtn.innerText = "開始抽球 (Start)";
-            }, 1200);
+
+                winnerOverlay.style.opacity = 0; // Hide overlay
+                winnerOverlay.style.transform = "translate(-50%, -50%) scale(0.5)"; // Reset scale
+            }, 3000); // Show winner for 3 seconds
         }
 
         function showWinnerEffect(name, color) {
@@ -700,9 +887,10 @@
             winnerOverlay.style.transform = "translate(-50%, -50%) scale(1.5)";
 
             setTimeout(() => {
-                 winnerOverlay.style.transform = "translate(-50%, -50%) scale(1)";
+                winnerOverlay.style.transform = "translate(-50%, -50%) scale(1)";
             }, 200);
         }
     </script>
 </body>
+
 </html>
